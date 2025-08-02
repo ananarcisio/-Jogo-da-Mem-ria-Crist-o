@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Memória Cristão</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .info-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 120px);
+            grid-template-rows: repeat(4, 120px);
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(145deg, #f0f0f0, #d0d0d0);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .card-back {
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            font-size: 2em;
+        }
+
+        .card-front {
+            background: white;
+            color: #333;
+            font-size: 3em;
+            text-align: center;
+            display: none;
+        }
+
+        .card.flipped .card-back {
+            display: none;
+        }
+
+        .card.flipped .card-front {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card.matched {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: white;
+            cursor: default;
+        }
+
+        .card.matched:hover {
+            transform: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .new-game-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .new-game-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .verse-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .verse-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .verse-display {
+            max-width: 600px;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verse-text {
+            font-size: 1.1em;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .verse-reference {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #f1c40f;
+        }
+
+        .congratulations {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 600px) {
+            .game-board {
+                grid-template-columns: repeat(4, 80px);
+                grid-template-rows: repeat(4, 80px);
+                gap: 8px;
+            }
+
+            .card {
+                width: 80px;
+                height: 80px;
+                font-size: 2em;
+            }
+
+            .card-front {
+                font-size: 2em;
+            }
+
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>✝️ Jogo da Memória Cristão</h1>
+    
+    <div class="game-info">
+        <div class="info-item">
+            <div>Movimentos: <span id="moves">0</span></div>
+        </div>
+        <div class="info-item">
+            <div>Pares: <span id="pairs">0</span>/8</div>
+        </div>
+        <div class="info-item">
+            <div>Tempo: <span id="time">00:00</span></div>
+        </div>
+    </div>
+
+    <div class="verse-display" id="verseDisplay">
+        <div>
+            <div class="verse-text" id="verseText">Clique em "Novo Versículo" para receber uma palavra de fé!</div>
+        </div>
+    </div>
+
+    <div class="game-board" id="gameBoard"></div>
+
+    <div class="controls">
+        <button class="btn new-game-btn" onclick="newGame()">Novo Jogo</button>
+        <button class="btn verse-btn" onclick="showRandomVerse()">Novo Versículo</button>
+    </div>
+
+    <div id="congratulations"></div>
+
+    <script>
+        const symbols = ['✝️', '🙏', '❤️', '🕊️', '⭐', '🌟', '📖', '🎵'];
+        const verses = [
+            {
+                text: "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna.",
+                reference: "João 3:16"
+            },
+            {
+                text: "Posso todas as coisas naquele que me fortalece.",
+                reference: "Filipenses 4:13"
+            },
+            {
+                text: "O Senhor é o meu pastor; nada me faltará.",
+                reference: "Salmos 23:1"
+            },
+            {
+                text: "Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.",
+                reference: "Salmos 37:5"
+            },
+            {
+                text: "E sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus.",
+                reference: "Romanos 8:28"
+            },
+            {
+                text: "Não temas, porque eu sou contigo; não te assombres, porque eu sou teu Deus.",
+                reference: "Isaías 41:10"
+            },
+            {
+                text: "Buscai primeiro o reino de Deus, e a sua justiça, e todas estas coisas vos serão acrescentadas.",
+                reference: "Mateus 6:33"
+            },
+            {
+                text: "O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha.",
+                reference: "1 Coríntios 13:4"
+            }
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let gameTime = 0;
+        let timer = null;
+        let gameStarted = false;
+
+        function createCards() {
+            const cardPairs = [...symbols, ...symbols];
+            cardPairs.sort(() => Math.random() - 0.5);
+            
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            cards = [];
+
+            cardPairs.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+                
+                card.innerHTML = `
+                    <div class="card-back">✝️</div>
+                    <div class="card-front">${symbol}</div>
+                `;
+                
+                card.addEventListener('click', () => flipCard(card));
+                gameBoard.appendChild(card);
+                cards.push(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length >= 2) {
+                return;
+            }
+
+            if (!gameStarted) {
+                startTimer();
+                gameStarted = true;
+            }
+
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.symbol === card2.dataset.symbol) {
+                setTimeout(() => {
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    matchedPairs++;
+                    document.getElementById('pairs').textContent = matchedPairs;
+                    
+                    if (matchedPairs === 8) {
+                        endGame();
+                    }
+                    
+                    flippedCards = [];
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                gameTime++;
+                const minutes = Math.floor(gameTime / 60);
+                const seconds = gameTime % 60;
+                document.getElementById('time').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            const congratulations = document.getElementById('congratulations');
+            congratulations.innerHTML = `
+                <div class="congratulations">
+                    🎉 Parabéns! Você completou o jogo! 🎉<br>
+                    Movimentos: ${moves} | Tempo: ${document.getElementById('time').textContent}<br>
+                    "Bem-aventurados os que não viram e creram!" - João 20:29
+                </div>
+            `;
+            
+            playVictorySound();
+        }
+
+        function playVictorySound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [523, 659, 784, 1047]; // C, E, G, C
+            
+            notes.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                const startTime = audioContext.currentTime + index * 0.2;
+                gainNode.gain.setValueAtTime(0.3, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.3);
+            });
+        }
+
+        function newGame() {
+            clearInterval(timer);
+            matchedPairs = 0;
+            moves = 0;
+            gameTime = 0;
+            gameStarted = false;
+            flippedCards = [];
+            
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('pairs').textContent = '0';
+            document.getElementById('time').textContent = '00:00';
+            document.getElementById('congratulations').innerHTML = '';
+            
+            createCards();
+        }
+
+        function showRandomVerse() {
+            const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+            const verseDisplay = document.getElementById('verseDisplay');
+            
+            verseDisplay.innerHTML = `
+                <div>
+                    <div class="verse-text">"${randomVerse.text}"</div>
+                    <div class="verse-reference">${randomVerse.reference}</div>
+                </div>
+            `;
+        }
+
+        // Inicializar jogo
+        newGame();
+        showRandomVerse();
+    </script>
+</body>
+</html>
